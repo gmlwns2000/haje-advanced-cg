@@ -1,9 +1,7 @@
-from typing import List
 import numba, time, tqdm, cv2
 
 import numpy as np
 import matplotlib.pyplot as plt
-from numba.typed import List as NumbaList
 
 @numba.jit(cache=True)
 def normalize(v: numba.float64[:]):
@@ -44,16 +42,6 @@ class Sphere:
     self.velocity = np.zeros_like(center)
 
   def intersect(self, ray: Ray):
-    """Ray-sphere intersection test
-    @TODO: Implement ray-sphere intersection test
-    See https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
-    You don't need to fill in Intersection.normal yet; leave it None
-    
-    Useful numpy methods
-     - np.dot
-     - np.sqrt
-    """
-
     pos_center = ray.pos - self.center
     a = 1
     b = 2 * np.dot(ray.dir, pos_center)
@@ -185,7 +173,7 @@ def main(img:numba.float64[:,:], simul_steps:int):
   #env = CompositeShape([s1, s2, c1])
   env = CompositeShape(numba.typed.List(spheres), numba.typed.List(cubes))
 
-  PCORES: int = 4
+  PCORES: int = 4 # this is for parallel but not works well LOL
   for thread_id in numba.prange(PCORES):
     for w in range(thread_id, W, PCORES):
       #if not ((w % PCORES) == thread_id): continue
