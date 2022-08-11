@@ -173,7 +173,7 @@ def main(img:numba.float64[:,:], simul_steps:int):
   #env = CompositeShape([s1, s2, c1])
   env = CompositeShape(numba.typed.List(spheres), numba.typed.List(cubes))
 
-  PCORES: int = 4 # this is for parallel but not works well LOL
+  PCORES: int = 1 # this is for parallel but not works well LOL
   for thread_id in numba.prange(PCORES):
     for w in range(thread_id, W, PCORES):
       #if not ((w % PCORES) == thread_id): continue
@@ -194,7 +194,7 @@ if __name__ == '__main__':
   print('compile...')
   main(np.zeros((4, 4), dtype=np.float64), 0)
 
-  W = H = 1080
+  W = H = 1440
   img = np.zeros((W, H), dtype=np.float64)
 
   print('running...')
@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
   out = cv2.VideoWriter('output.mp4', fourcc, fps, (w, h))
 
-  def render(device, tqdm_position, i):
+  def render(i):
     img = np.zeros((W, H), dtype=np.float64)
     main(img, i)
     frame = (img - np.min(img))
@@ -226,14 +226,27 @@ if __name__ == '__main__':
     frame = frame * 255
     frame = frame.astype(np.uint8)
     frame = cv2.flip(frame, 0)
-    res = cv2.applyColorMap(frame, cv2.COLORMAP_COOL)
+    res = cv2.applyColorMap(frame, cv2.COLORMAP_JET)
     return (i, res)
 
   if not out.isOpened():
     print('File open failed!')
   else:
-    for i in tqdm.tqdm(range(150)):
-      _, res = render(0, 0, i)
+    import threading
+    import multiprocessing as mp
+    # for i in tqdm.tqdm(range(150)):
+    #   _, res = render(0, 0, i)
+    #   out.write(res)
+
+    def frender(i):
+      ret = render(i)
+      print('fin', i)
+      return ret
+    
+    with mp.Pool(mp.cpu_count()) as p:
+      rets = p.map(frender, [i for i in range(fps*10)])
+    
+    for i, res in tqdm.tqdm(sorted(rets, key=lambda x: x[0])):
       out.write(res)
 
   out.release()
