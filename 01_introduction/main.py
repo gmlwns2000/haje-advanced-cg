@@ -245,7 +245,7 @@ if __name__ == '__main__':
     print('File open failed!')
   else:
     for i in tqdm.tqdm(range(150)):
-      res = render(0, 0, i)
+      _, res = render(0, 0, i)
       out.write(res)
 
   out.release()
