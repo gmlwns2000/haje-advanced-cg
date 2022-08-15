@@ -238,13 +238,19 @@ if __name__ == '__main__':
     #   _, res = render(0, 0, i)
     #   out.write(res)
 
-    def frender(i):
-      ret = render(i)
-      print('fin', i)
-      return ret
+    def frender(iss):
+      rets = []
+      for i in iss:
+        ret = render(i)
+        print('fin', i)
+        rets.append(ret)
+      return rets
     
     with mp.Pool(mp.cpu_count()) as p:
-      rets = p.map(frender, [i for i in range(fps*10)])
+      _rets = p.map(frender, [[i for i in range(icpu, fps*10, mp.cpu_count())] for icpu in range(mp.cpu_count())])
+      rets = []
+      for r in _rets:
+        rets += r
     
     for i, res in tqdm.tqdm(sorted(rets, key=lambda x: x[0])):
       out.write(res)
